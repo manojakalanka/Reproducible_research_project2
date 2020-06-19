@@ -2,157 +2,144 @@
 title: "Reproducible Research Project 1"
 author: "Manoj Akalanka"
 date: "06/18/2020"
-output: html_document
----
+output: 
+      html_document: 
+            keep_md: true
 
-## Introduction
-It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the “quantified self” movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
 
-This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+# "Types of severe weather events which have huge impact on public health and economic problems"
 
-The data for this assignment can be downloaded from the course web site:
 
-* Dataset: [Activity monitoring data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip) 
 
-The variables included in this dataset are:
 
-steps: Number of steps taking in a 5-minute interval (missing values are coded as 𝙽𝙰) </br>
-date: The date on which the measurement was taken in YYYY-MM-DD format </br>
-interval: Identifier for the 5-minute interval in which measurement was taken </br>
-The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset. </br>
+# Synopsis
 
-## Loading and preprocessing the data
-Unzip data to obtain a csv file.
+Storms and other severe weather events have huge impact on public health and economic problems for municipalities and their inhabitants. Some of severe events can cause injuries property damage and even lead to death. This analysis present which types of events are most harmful with respect to population health and which have the greatest economic consequences.
 
-```R
-library("data.table")
+# Data Processing
 
-fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
-download.file(fileUrl, destfile = paste0(getwd(), '/repdata%2Fdata%2Factivity.zip'), method = "curl")
-unzip("repdata%2Fdata%2Factivity.zip",exdir = "data")
+I'm going to use The U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database which tracks characteristics of major storms and weather events in the United States. This dataset comes from the Internet. 
+
+
+
+Download file from the Internet:
+
+```r
+link <- "http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+download.file(url = link, destfile = "StormData")
 ```
 
-## Reading csv Data into Data.Table. 
-```R
-activityDT <- data.table::fread(input = "data/activity.csv")
+Read a file in table format
+
+```r
+StormData <- read.csv(bzfile("StormData"),sep = ",",header=TRUE)
 ```
 
-## What is mean total number of steps taken per day?
+Property damage estimates were entered as actual dollar amounts (the variable PROPDMG). But they were rounded to three significant digits, followed by an alphabetical character signifying the magnitude of the number, i.e., 1.55B for $1,550,000,000. Alphabetical characters used to signify magnitude include “K” for thousands, “M” for millions, and “B” for billions. So I created a new variable PROPDMGEXP2 and assigned conditionally "K" = 1000, "M" = 1000000, "B" = 1000000000, in other cases 1. These variables are multiplied in the next step.
 
-1. Calculate the total number of steps taken per day
 
-```R
-Total_Steps <- activityDT[, c(lapply(.SD, sum, na.rm = TRUE)), .SDcols = c("steps"), by = .(date)] 
-
-head(Total_Steps, 10)
-
-#          date steps
-# 1: 2012-10-01     0
-# 2: 2012-10-02   126
-# 3: 2012-10-03 11352
-# 4: 2012-10-04 12116
-# 5: 2012-10-05 13294
-# 6: 2012-10-06 15420
-# 7: 2012-10-07 11015
-# 8: 2012-10-08     0
-# 9: 2012-10-09 12811
-# 10: 2012-10-10  9900
+```r
+table(StormData$PROPDMGEXP)
 ```
 
-2. If you do not understand the difference between a histogram and a barplot, research the difference between them. Make a histogram of the total number of steps taken each day. 
-
-```R
-library(ggplot2)
-
-png("hist1.png", width=480, height=480)
-
-ggplot(Total_Steps, aes(x = steps)) +
-    geom_histogram(fill = "blue", binwidth = 1000) +
-    labs(title = "Daily Steps", x = "Steps", y = "Frequency")
-
-dev.off()
+```
+## 
+##             -      ?      +      0      1      2      3      4      5 
+## 465934      1      8      5    216     25     13      4      4     28 
+##      6      7      8      B      h      H      K      m      M 
+##      4      5      1     40      1      6 424665      7  11330
 ```
 
-3. Calculate and report the mean and median of the total number of steps taken per day
-
-```R
-Total_Steps[, .(Mean_Steps = mean(steps), Median_Steps = median(steps))]
+```r
+StormData$PROPDMGEXP2 <- 1
+StormData$PROPDMGEXP2[which(StormData$PROPDMGEXP == "K")] <- 1000
+StormData$PROPDMGEXP2[which(StormData$PROPDMGEXP == "M" | StormData$PROPDMGEXP == "m")] <- 1000000
+StormData$PROPDMGEXP2[which(StormData$PROPDMGEXP == "B")] <- 1000000000
 ```
 
-## What is the average daily activity pattern?
 
-1. Make a time series plot (i.e. 𝚝𝚢𝚙𝚎 = "𝚕") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
-
-```R
-IntervalDT <- activityDT[, c(lapply(.SD, mean, na.rm = TRUE)), .SDcols = c("steps"), by = .(interval)] 
-
-ggplot(IntervalDT, aes(x = interval , y = steps)) +
-    geom_line(color="blue", size=1) +
-    labs(title = "Avg. Daily Steps", x = "Interval", y = "Avg. Steps per day")
+```r
+table(StormData$PROPDMGEXP2)
 ```
 
-2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
-```R
-IntervalDT[steps == max(steps), .(max_interval = interval)]
+```
+## 
+##      1   1000  1e+06  1e+09 
+## 466255 424665  11337     40
 ```
 
-## Imputing missing values
+# Which types of events are most harmful to population health?
 
-1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with 𝙽𝙰s)
+Fatalities and injuries have the most impact on public health, so I will present what types of severe weather are the most dangerous.
 
-```R
-activityDT[is.na(steps), .N ]
 
-# alternative solution
-nrow(activityDT[is.na(steps),])
+The first plot presents a Death toll by Event type
+
+
+```r
+StormData %>%
+      select(FATALITIES, EVTYPE) %>%
+      group_by(EVTYPE) %>%
+      summarise(SumFATALITIES = sum(FATALITIES)) %>%
+      top_n(n = 8, wt = SumFATALITIES) %>%
+      ggplot(aes(y = SumFATALITIES, x = reorder(x = EVTYPE, X = SumFATALITIES), fill=EVTYPE))+
+      geom_bar(stat = "identity", show.legend = FALSE) +
+      #geom_text(aes(label=SumFATALITIES), size = 4, hjust = 0.5, vjust = -0.1) +
+      xlab(label = "") +
+      ylab(label = "Death toll") +
+      coord_flip() +
+      theme_light()
 ```
 
-2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+![](Project_2_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
-```R
-# Filling in missing values by mean of dataset. 
-activityDT[is.na(steps), "steps"] <- round(activityDT[, c(lapply(.SD, mean, na.rm = TRUE)), .SDcols = c("steps")])
+The second plot presents Injuries by Event type
+
+
+```r
+StormData %>%
+      select(INJURIES, EVTYPE) %>%
+      group_by(EVTYPE) %>%
+      summarise(SumINJURIES = sum(INJURIES)) %>%
+      top_n(n = 8, wt = SumINJURIES) %>%
+      ggplot(aes(y = SumINJURIES, x = reorder(x = EVTYPE, X = SumINJURIES), fill=EVTYPE))+
+      geom_bar(stat = "identity", show.legend = FALSE) +
+      #geom_text(aes(label=SumINJURIES), size = 4, hjust = 0.5, vjust = -0.1) +
+      xlab(label = "") +
+      ylab(label = "INJURIES") +
+      coord_flip() +
+      theme_light()
 ```
 
-3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+![](Project_2_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
-```R
-data.table::fwrite(x = activityDT, file = "data/tidyData.csv", quote = FALSE)
+# Which types of events have the greatest economic consequences?
+
+This plot shows Property damage estimates by Event type
+
+
+```r
+StormData %>%
+      select(PROPDMG, PROPDMGEXP2, EVTYPE) %>%
+      group_by(EVTYPE) %>%
+      mutate(SumPROPDMGEXP = (PROPDMG * PROPDMGEXP2)) %>%
+      summarise(SumPROPDMGEXP2 = sum(SumPROPDMGEXP)) %>%
+      top_n(n = 8, wt = SumPROPDMGEXP2) %>%
+      ggplot(aes(y = SumPROPDMGEXP2, x = reorder(x = EVTYPE, X = SumPROPDMGEXP2), fill=EVTYPE))+
+      geom_bar(stat = "identity", show.legend = FALSE) +
+      #geom_text(aes(label=SumFATALITIES), size = 4, hjust = 0.5, vjust = -0.1) +
+      xlab(label = "") +
+      ylab(label = "Property damage estimates") +
+      coord_flip() +
+      theme_light()
 ```
 
-4. Make a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+![](Project_2_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
-```R
+# Conclusion
 
-# total number of steps taken per day
-Total_Steps <- activityDT[, c(lapply(.SD, sum, na.rm = TRUE)), .SDcols = c("steps"), by = .(date)] 
+#### As you can see above flood has the greatest economic consequences. Tornado is the most harmful to population health because caused the most death tolls and injuries.
 
-# mean and median total number of steps taken per day
-Total_Steps[, .(Mean_Steps = mean(steps), Median_Steps = median(steps))]
 
-library(ggplot2)
-ggplot(Total_Steps, aes(x = steps)) +
-    geom_histogram(fill = "blue", binwidth = 1000) +
-    labs(title = "Daily Steps", x = "Steps", y = "Frequency")
-```
 
-Type of Estimate | Mean_Steps | Median_Steps
---- | --- | ---
-First Part (with na) | 9354.23 | 10395
-Second Part (fillin in na with mean) | 10751.74 | 10656
-
-## Are there differences in activity patterns between weekdays and weekends?
-
-1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
-
-```R
-activityDT[, dateTime := as.POSIXct(date, format = "%Y-%m-%d")]
-activityDT[, `Day of Week`:= weekdays(x = dateTime)]
-
-activityDT[grepl(pattern = "Monday|Tuesday|Wednesday|Thursday|Friday", x = `Day of Week`), "weekday or weekend"] <- "weekday"
-activityDT[grepl(pattern = "Saturday|Sunday", x = `Day of Week`), "weekday or weekend"] <- "weekend"
-activityDT[, `weekday or weekend` := as.factor(`weekday or weekend`)]
-```
-
-2. Make a panel plot containing a time series plot (i.e. 𝚝𝚢𝚙𝚎 = "𝚕") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
-
+.
