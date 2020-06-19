@@ -91,7 +91,7 @@ StormData %>%
       theme_light()
 ```
 
-![](Project_2_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+![](https://github.com/manojakalanka/Reproducible_research_project2/blob/master/Project2_Files/unnamed-chunk-5-1.png)<!-- -->
 
 The second plot presents Injuries by Event type
 
@@ -111,7 +111,7 @@ StormData %>%
       theme_light()
 ```
 
-![](Project_2_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+![](https://github.com/manojakalanka/Reproducible_research_project2/blob/master/Project2_Files/unnamed-chunk-6-1.png)<!-- -->
 
 # Which types of events have the greatest economic consequences?
 
@@ -134,7 +134,7 @@ StormData %>%
       theme_light()
 ```
 
-![](Project_2_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+![](https://github.com/manojakalanka/Reproducible_research_project2/blob/master/Project2_Files/unnamed-chunk-7-1.png)<!-- -->
 
 # Conclusion
 
